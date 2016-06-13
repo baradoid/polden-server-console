@@ -24,6 +24,10 @@ signals:
     void button2();
     void buttonCancel();
 
+    void lightTurnedOff();
+    void lightTurnedOn();
+
+
 public slots:
     void processMessage(const QString &msg);
 };

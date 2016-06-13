@@ -75,9 +75,6 @@ void TelnetTcpServer::slotServerRead(int sockInd)
         //sock->write(msg);
 
         //qDebug() << codec1->fromUnicode(msg);
-
-
-
         if( (msg == "wo\r\n") || (msg == "wo\r") || (msg == "wo\n") ){
             qDebug("TelnetTcpServer>wo msg recvd!");
             sAttr->bWo = true;

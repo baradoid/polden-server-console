@@ -72,8 +72,8 @@ void ProjectorQuery::process()
             }
 
             if(curState != lastState){
-                lastState = curState;
-                qInfo() << "ProjectorQuery> proj" << name <<"new state:" << repl;
+                lastState = curState;                
+                qInfo() << "ProjectorQuery" << name <<">new state:" << repl;
                 //emit newState(repl);
             }
             if(curState == onState)

@@ -7,6 +7,7 @@
 #include "ProjectorQuery.h"
 #include "CommandController.h"
 #include "ConsoleInputProcessor.h"
+#include "waitScenarios.h"
 
 #include <qtconcurrentrun.h>
 #include <QEventLoop>
@@ -15,25 +16,22 @@
 #include <QTimer>
 #include <QProcess>
 
-TelnetTcpServer *tcpServGl = NULL;
+//class Logger : public QObject {
+//   // Q_OBJECT
+//    //Q_SIGNAL
+//public:
+//    Logger(QObject *parent = 0) : QObject(parent) {}
+
+//    void notify(const QString text) {
+//        emit notification(text);
+//        qInfo(qPrintable(text));
+//    }
+
+//signals:
+//   Q_SIGNAL void notification(const QString);
 
 
-class Logger : public QObject {
-   // Q_OBJECT
-    //Q_SIGNAL
-public:
-    Logger(QObject *parent = 0) : QObject(parent) {}
-
-    void notify(const QString text) {
-        emit notification(text);
-        qInfo(qPrintable(text));
-    }
-
-signals:
-   Q_SIGNAL void notification(const QString);
-
-
-};
+//};
 
 
 CommandController cmdCtl;
@@ -41,144 +39,18 @@ QProcess videoPlayer;
 QList<ProjectorQuery*> pqList;
 TelnetTcpServer *tcpServ = NULL;
 
-TCmdButton waitForTimeoutOrCancelCmd(int secTimeout)
-{
-    QEventLoop el;
 
-    QMetaObject::Connection m_conn1, m_conn2;
-    m_conn1 = QObject::connect(&cmdCtl, &CommandController::buttonCancel, [&el]() { el.exit(cmdButtonCancel); });
-
-    QTimer timer;
-    timer.setSingleShot(true);
-    timer.setInterval(secTimeout * 1000);
-    m_conn2 = QObject::connect(&timer, &QTimer::timeout, [&el]() { el.exit(cmdTimeout); });
-    timer.start();
-
-    TCmdButton ret = (TCmdButton)el.exec();
-
-    QObject::disconnect(m_conn1);
-    QObject::disconnect(m_conn2);
-
-    return ret;
-}
-
-//0 - exit on finish, 1 - exit on cancel
-TCmdButton waitForFinishPlayOrCancel()
-{
-    QEventLoop el;
-
-    QMetaObject::Connection m_conn1, m_conn2;
-
-    m_conn1 = QObject::connect(&cmdCtl, &CommandController::buttonCancel, [&el]() { el.exit(cmdButtonCancel); });
-    //QObject::connect((QObject*)&videoPlayer, &QProcess::finished, [&el]() { el.exit(0); });
-    m_conn2 = QObject::connect(&videoPlayer, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-          [&el](int exitCode, QProcess::ExitStatus exitStatus){  el.exit(cmdFinished); });
-
-    TCmdButton ret = (TCmdButton)el.exec();
-
-    QObject::disconnect(m_conn1);
-    QObject::disconnect(m_conn2);
-
-    return ret;
-}
-
-TCmdButton waitForBut1CmdOrBut2Cmd()
-{
-    QEventLoop el;
-
-    QMetaObject::Connection m_conn1, m_conn2;
-    m_conn1 = QObject::connect(&cmdCtl, &CommandController::button1, [&el]() { el.exit(cmdButton1); });
-    m_conn2 = QObject::connect(&cmdCtl, &CommandController::button2, [&el]() { el.exit(cmdButton2); });
-
-    TCmdButton ret = (TCmdButton)el.exec();
-
-    QObject::disconnect(m_conn1);
-    QObject::disconnect(m_conn2);
-
-    return ret;
-}
-TCmdButton waitForProjectorsOnOrCancel()
-{
-    QEventLoop el;
-
-    QMetaObject::Connection m_conn1, m_conn2;
-    m_conn1 = QObject::connect(&cmdCtl, &CommandController::buttonCancel, [&el]() { el.exit(cmdButtonCancel); });
-
-    TCmdButton ret;
-    foreach (ProjectorQuery* pq, pqList) {
-        TProjState ps = pq->getState();
-        if(ps == onState){
-            ret = cmdFinished;
-            qInfo() << "proj " << pq->name << " in state "<< ps <<". Nothing to do.";
-        }
-        else{
-            qInfo() << "proj " << pq->name << " in state "<< ps <<". Send PowerOn command.";
-            pq->on();
-        }
-    }
-
-    foreach (ProjectorQuery* pq, pqList) {
-        if(pq->getState() == onState){
-            ret = cmdFinished;
-        }
-        else{
-            m_conn2 = QObject::connect(pq, &ProjectorQuery::powerOnState, [&el]() { el.exit(cmdFinished); });
-
-            qInfo() << "main> wait for power on proj " << pq->name;
-            ret = (TCmdButton)el.exec();
-            QObject::disconnect(m_conn2);
-            if(ret == cmdButtonCancel){
-                break;
-            }
-        }
-    }
-
-    QObject::disconnect(m_conn1);
-
-    return ret;
-}
-
-TCmdButton waitForProjectorsOffOrCancel()
-{
-    QEventLoop el;
-
-    QMetaObject::Connection m_conn1, m_conn2;
-    m_conn1 = QObject::connect(&cmdCtl, &CommandController::buttonCancel, [&el]() { el.exit(cmdButtonCancel); });
-
-    TCmdButton ret;
-    foreach (ProjectorQuery* pq, pqList) {
-        TProjState ps = pq->getState();
-        if((ps == offState) || (ps == coolingState)){
-            ret = cmdFinished;
-            qInfo() << "proj " << pq->name << " in state "<< ps <<". Nothing to do.";
-        }
-        else{
-            qInfo() << "proj " << pq->name << " in state "<< ps <<". Send PowerOff command.";
-            pq->off();
-        }
-    }
-
-    foreach (ProjectorQuery* pq, pqList) {
-        if(pq->getState() == offState){
-            ret = cmdFinished;
-        }
-        else{
-            m_conn2 = QObject::connect(pq, &ProjectorQuery::powerOffState, [&el]() { el.exit(cmdFinished); });
-
-            qInfo() << "main> wait for power off proj " << pq->name;
-            ret = (TCmdButton)el.exec();
-            QObject::disconnect(m_conn2);
-            if(ret == cmdButtonCancel){
-                break;
-            }
-        }
-    }
-
-    QObject::disconnect(m_conn1);
-
-    return ret;
-}
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg);
+
+void turnOnLight()
+{
+    qInfo() << "light_on" ;
+}
+
+void turnOffLight()
+{
+    qInfo() << "light_off" ;
+}
 
 int main(int argc, char *argv[])
 {   
@@ -217,10 +89,11 @@ int main(int argc, char *argv[])
 
 //    w1.start();
 
-    pqList << new ProjectorQuery("192.168.0.55", "192.168.0.55");
+    pqList << new ProjectorQuery("192.168.1.10", "192.168.1.10");
+    /*pqList << new ProjectorQuery("192.168.0.55", "192.168.0.55");
     pqList << new ProjectorQuery("192.168.0.14", "192.168.0.14");
     pqList << new ProjectorQuery("192.168.0.8", "192.168.0.8");
-    pqList << new ProjectorQuery("192.168.0.86", "192.168.0.86");
+    pqList << new ProjectorQuery("192.168.0.86", "192.168.0.86");*/
     //pqList << new ProjectorQuery();
     //pqList << new ProjectorQuery();
     //pqList << new ProjectorQuery();
@@ -239,18 +112,18 @@ int main(int argc, char *argv[])
     }
 
 
-    QSound warningSound("C:\\Content\\Success.wav");
+    QSound warningSound("Content\\Success.wav");
 
     QStringList args1 ;
-    args1.append("C:\\Content\\Video.avi");
+    args1.append("Content\\Video.avi");
     args1.append("/play");
-    args1.append("/fullscreen");
+    //args1.append("/fullscreen");
     args1.append("/close");
 
     QStringList args2 ;
-    args2.append("C:\\Content\\Video.avi");
+    args2.append("Content\\Video.avi");
     args2.append("/open");
-    args2.append("/fullscreen");
+    //args2.append("/fullscreen");
 
 
     videoPlayer.setProgram("MPC-HC64\\mpc-hc64");
@@ -265,30 +138,45 @@ int main(int argc, char *argv[])
 
      forever{
         qInfo() << "main> =====  ";
-        qInfo() << "main> video player start black";
+        qInfo() << "main> video player start black";        
         videoPlayer.close();
         videoPlayer.setArguments(args2);
         videoPlayer.start();
+        qInfo() << "main> turn ON light";
+        turnOnLight();
+        qInfo() << "main> wait for light turn ON";
+        //add wait for light turn ON
         qInfo() <<"main> power off projectors";
         TCmdButton ret = waitForProjectorsOffOrCancel();
         qInfo() <<"main> waitForProjectorsOff end with " << resultMap[ret];
 
         qDebug("main> wait for command");
-        ret = waitForBut1CmdOrBut2Cmd();
-        qInfo()<<"main> recvd " << resultMap[ret] << " cmd";
+        TCmdButton mainCmd = waitForBut1CmdOrBut2Cmd();
+        qInfo()<<"main> recvd " << resultMap[mainCmd] << " cmd";
         warningSound.play();
         qInfo() <<"main> power on projectors";
         ret = waitForProjectorsOnOrCancel();
         qInfo() <<"main> waitForProjectorsOn end with " << resultMap[ret];
         if(ret == cmdButtonCancel)
             continue;
-        qInfo() <<"main> wait for timeout";
-        ret = waitForTimeoutOrCancelCmd(10);
-        warningSound.stop();
-        qInfo() <<"main> waiting timeout end with " << resultMap[ret] << " cmd";
-        if(ret == cmdButtonCancel)
-            continue;
+        if(mainCmd == cmdButton1){
+            qInfo() <<"main> wait for timeout";
+            ret = waitForTimeoutOrCancelCmd(10);
+            qInfo() <<"main> waiting timeout end with " << resultMap[ret] << " cmd";
+            if(ret == cmdButtonCancel)
+                continue;
+        }
+        else if(mainCmd = cmdButton2){
+            qInfo() <<"main> wait for 2nd push but2 or cancel";
+            //ret = waitForTimeoutOrCancelCmd(10);
+        }
 
+        warningSound.stop();
+
+        qInfo() << "main> turn OFF light";
+        turnOffLight();
+        qInfo() << "main> wait for light turn OFF";
+        //add wait for light turn OFF
         videoPlayer.close();
         videoPlayer.setArguments(args1);
         qInfo() <<"main> video player start";

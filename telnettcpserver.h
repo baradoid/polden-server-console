@@ -16,9 +16,6 @@ class TelnetTcpServer : public QObject
 public:
     explicit TelnetTcpServer(int port, QObject *parent = 0);
 
-
-signals:
-
 public slots:
     void slotNewConnection();
     void slotServerRead(int);

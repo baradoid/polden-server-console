@@ -58,12 +58,10 @@ void ProjectorQuery::process()
 
             if(repl == "%1POWR=0\r"){
                 //qDebug() << "emit powerOffState";
-                emit powerOffState();
                 curState = offState;
             }
             else if(repl == "%1POWR=1\r"){
                 //qDebug() << "emit powerOnState";
-                emit powerOnState();
                 curState = onState;
             }
             else if(repl == "%1POWR=2\r"){
@@ -72,6 +70,16 @@ void ProjectorQuery::process()
             else if(repl == "%1POWR=3\r"){
                 curState = warmUpState;
             }
+
+            if(curState != lastState){
+                lastState = curState;
+                qInfo() << "ProjectorQuery> proj" << name <<"new state:" << repl;
+                //emit newState(repl);
+            }
+            if(curState == onState)
+                emit powerOnState();
+            else if(curState == offState)
+                emit powerOffState();
             //else
             //    qDebug() << "unknown repl:" << repl;
 
@@ -89,11 +97,7 @@ void ProjectorQuery::process()
                 }
                 projectorClient.write(lowLevelCmd.toLatin1());
             }
-            if(curState != lastState){
-                lastState = curState;
-                qDebug() << "ProjectorQuery> proj" << name <<"new state:" << repl;
-                //emit newState(repl);
-            }
+
         }
         QThread::msleep(500);
 

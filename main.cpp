@@ -107,7 +107,7 @@ TCmdButton waitForProjectorsOnOrCancel()
     TCmdButton ret;
     foreach (ProjectorQuery* pq, pqList) {
         TProjState ps = pq->getState();
-        if((ps == onState) || (ps == warmUpState)){
+        if(ps == onState){
             ret = cmdFinished;
             qInfo() << "proj " << pq->name << " in state "<< ps <<". Nothing to do.";
         }
@@ -202,6 +202,7 @@ int main(int argc, char *argv[])
 
     TelnetTcpServer tcpServLoc(23);
     tcpServ = &tcpServLoc;
+    cmdCtl.connect(tcpServ, SIGNAL(msgRecvd(QString)), SLOT(processMessage(const QString)));
 
     //QThread * thread = new QThread(&a); // thread owned by the application object
     //Notified * notified = new Notified; // can't have an owner before it's moved to another thread
@@ -216,7 +217,10 @@ int main(int argc, char *argv[])
 
 //    w1.start();
 
-    pqList << new ProjectorQuery("192.168.1.10", "192.168.1.10");
+    pqList << new ProjectorQuery("192.168.0.55", "192.168.0.55");
+    pqList << new ProjectorQuery("192.168.0.14", "192.168.0.14");
+    pqList << new ProjectorQuery("192.168.0.8", "192.168.0.8");
+    pqList << new ProjectorQuery("192.168.0.86", "192.168.0.86");
     //pqList << new ProjectorQuery();
     //pqList << new ProjectorQuery();
     //pqList << new ProjectorQuery();
@@ -235,18 +239,18 @@ int main(int argc, char *argv[])
     }
 
 
-    QSound warningSound("C:\\ArcheologyMuseum_2_0\\Success.wav");
+    QSound warningSound("C:\\Content\\Success.wav");
 
     QStringList args1 ;
-    args1.append("C:\\dev\\polden\\server\\Content\\Video.avi");
+    args1.append("C:\\Content\\Video.avi");
     args1.append("/play");
-    //args1.append("/fullscreen");
+    args1.append("/fullscreen");
     args1.append("/close");
 
     QStringList args2 ;
-    args2.append("C:\\dev\\polden\\server\\Content\\Video.avi");
+    args2.append("C:\\Content\\Video.avi");
     args2.append("/open");
-    //args2.append("/fullscreen");
+    args2.append("/fullscreen");
 
 
     videoPlayer.setProgram("MPC-HC64\\mpc-hc64");

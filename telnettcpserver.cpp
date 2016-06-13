@@ -7,16 +7,16 @@ TelnetTcpServer::TelnetTcpServer(int port, QObject *parent) : QObject(parent),
 {
     //moveToThread(this);    
     mTcpServer = new QTcpServer(this);
-
-
-    connect(mTcpServer, &QTcpServer::newConnection, this, &TelnetTcpServer::slotNewConnection);
+    connect(mTcpServer, SIGNAL(newConnection()),
+            this, SLOT(slotNewConnection()));
 
     //connect(this, SIGNAL(printSignal(const char*)), this, SLOT(printfSlot(const char*)));
 
-    if(!mTcpServer->listen(QHostAddress::Any, port)){
-        qDebug() << "server is not started";
+    if(mTcpServer->listen(QHostAddress::Any, port) == true){
+        qInfo() << "TelnetTcpServer> server is started";
     } else {
-        qDebug() << "server is started";
+        qInfo() << "TelnetTcpServer> server is not started";
+
     }
 
     sockSignalMapperReadyRead = new QSignalMapper(this);
@@ -26,6 +26,9 @@ TelnetTcpServer::TelnetTcpServer(int port, QObject *parent) : QObject(parent),
             this, SLOT(slotServerRead(int)));
     connect(sockSignalMapperDisconnected, SIGNAL(mapped(int)), //SIGNAL(mapped(QString)),
             this, SLOT(slotClientDisconnected(int)));
+
+    connect(this, SIGNAL(printSignal(const QString &)),
+            this, SLOT(printfSlot(const QString &)));
 
 }
 
@@ -50,6 +53,7 @@ void TelnetTcpServer::slotNewConnection()
     connect(mTcpSocket, SIGNAL(readyRead()), sockSignalMapperReadyRead, SLOT(map()));
     connect(mTcpSocket, SIGNAL(disconnected()), sockSignalMapperDisconnected, SLOT(map()));
 
+    //connect(this, SIGNAL(msgRecvd(QString)), mTcpSocket, SLOT()
     sockSignalMapperReadyRead->setMapping(mTcpSocket, clientsInd);
     sockSignalMapperDisconnected->setMapping(mTcpSocket, clientsInd);    
     qDebug("TelnetTcpServer>terminal %d connected", clientsInd);
@@ -108,11 +112,11 @@ void TelnetTcpServer::printfSlot(const QString &s)
 
     foreach (int key, sockHashKeys) {
         QTcpSocket *sock = sockHash[key];
-        TSocketAttr *sAttr = sockAttr[clientsInd];
+        TSocketAttr *sAttr = sockAttr[key];
 
         if((sock->isWritable() == true) && (sAttr->bWo == false)){
             sock->write(qPrintable(s));
-            sock->write(qPrintable('\n'));
+            sock->flush();
         }
     }
 
@@ -123,13 +127,13 @@ void TelnetTcpServer::printfSlot(const QString &s)
 //        }
 //    }
 
-    qInfo("qTelnetServ %s", qPrintable(s));
+    //qInfo("qTelnetServ %s", qPrintable(s));
 }
 
-//void TelnetTcpServer::printf(const char *str)
-//{
-//    emit printSignal(str);
-//}
+void TelnetTcpServer::printf(const QString &s)
+{
+    emit printSignal(s);
+}
 
 
 

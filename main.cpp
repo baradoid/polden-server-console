@@ -36,60 +36,10 @@ signals:
 };
 
 
-
-//void hello(QString name, int num)
-//{
-//    qDebug() << "Hello" << name << "from" << QThread::currentThread();
-
-//    forever{
-//        qDebug("thread run %x num %d",  QThread::currentThread(), num);
-//        QThread::msleep(500);
-//    }
-//}
-
-
-//class QInputProcessor : public QObject
-//{
-//    Q_OBJECT
-//public:
-//    explicit QInputProcessor(QObject *parent = 0)
-//    {
-//    }
-
-//public slots:
-//    void process(){
-//        QTextStream cin(stdin);
-//        forever{
-//            QString str = cin.readLine();
-//            qDebug() << "detected line:" << str;
-//            QThread::msleep(200);
-
-
-//        }
-//    }
-
-//signals:
-//    void msgRecvd(const QString &msg);
-//};
-
-
-//void inputThread()
-//{
-//    QTextStream cin(stdin);
-//    forever{
-//        QString str = cin.readLine();
-//        qDebug() << "detected line:" << str;
-//        QThread::msleep(200);
-
-
-//    }
-
-//}
-
-
 CommandController cmdCtl;
 QProcess videoPlayer;
 QList<ProjectorQuery*> pqList;
+TelnetTcpServer *tcpServ = NULL;
 
 TCmdButton waitForTimeoutOrCancelCmd(int secTimeout)
 {
@@ -236,7 +186,7 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     //Logger log(&a);
-    TelnetTcpServer tcpServ(23);
+
     QList<QThread*> threads;
 
     QThread *ipThread = new QThread(&a); // thread owned by the application object
@@ -250,12 +200,15 @@ int main(int argc, char *argv[])
     threads << ipThread;
 
 
-    QThread * thread = new QThread(&a); // thread owned by the application object
+    TelnetTcpServer tcpServLoc(23);
+    tcpServ = &tcpServLoc;
+
+    //QThread * thread = new QThread(&a); // thread owned by the application object
     //Notified * notified = new Notified; // can't have an owner before it's moved to another thread
-    tcpServ.moveToThread(thread);
-    cmdCtl.connect(&tcpServ, SIGNAL(msgRecvd(QString)), SLOT(processMessage(const QString)));
-    thread->start();
-    threads << thread;
+    //tcpServ.moveToThread(thread);
+    //cmdCtl.connect(&tcpServ, SIGNAL(msgRecvd(QString)), SLOT(processMessage(const QString)));
+    //thread->start();
+    //threads << thread;
     //tcpServ.connect((QObject*)&w1, SIGNAL(resultReady(const QString)), SLOT(printfSlot(const QString)));
 
     //connect(&w1, SIGNAL(resultReady(QString)), &tcpServ, SLOT(printf(const char*)));
@@ -273,10 +226,10 @@ int main(int argc, char *argv[])
         pq->moveToThread(pqThread);
         pq->connect(pqThread, SIGNAL(started()), SLOT(process()));
         //tcpServ.connect(pq, SIGNAL(messageReady(QString)), SLOT(printfSlot(const QString)));
-        QObject::connect(pq, &ProjectorQuery::newState,
-                         [pq](const QString &s) {
-            qInfo() << " projector "<< pq->name <<" in " << s <<"state";
-        });
+//        QObject::connect(pq, &ProjectorQuery::newState,
+//                         [pq](const QString &s) {
+//            qInfo() << " projector "<< pq->name <<" in " << s <<"state";
+//        });
         pqThread->start();
         threads << pqThread;
     }
@@ -393,5 +346,8 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
 //    }
     printf("%s\n", localMsg.constData());
 
+    if(tcpServ != NULL){
+        tcpServ->printf(msg+'\n');
+    }
     lock.unlock();
 }

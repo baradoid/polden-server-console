@@ -24,9 +24,11 @@ public slots:
     void slotServerRead(int);
     void slotClientDisconnected(int);
 
-    void printfSlot(const QString &s);
 
-    //void printf(const char *str);
+
+    void printf(const QString &msg);
+private slots:
+    void printfSlot(const QString &s);
 private:
     QTcpServer * mTcpServer;
     //QTcpSocket * mTcpSocket;
@@ -41,7 +43,7 @@ private:
     int clientsInd;
 
 signals:
-    void printSignal(const char *str);
+    void printSignal(const QString &msg);
     void msgRecvd(const QString &msg);
 };
 

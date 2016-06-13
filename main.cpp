@@ -293,30 +293,7 @@ int main(int argc, char *argv[])
         qInfo() <<"main> video player end with " << resultMap[ret];
 
         continue;
-
-
-
-        qDebug("main>wait for power on");
-        //pq->waitForPowerOn();
-//        QEventLoop loop;
-//        loop.connect(pq, SIGNAL(powerOnState()), SLOT(quit()));
-//        loop.exec();
-        qDebug("main>power on!");
-        qDebug("main>wait for power off");
-        //pq->waitForPowerOff();
-        QThread::msleep(500);
-        qDebug("main>power off!");
     }
-    //tcpServ.wait();
-
-
-
-//    foreach (QThread *thread, threads) {
-//        //thread->quit();
-//        thread->wait();
-//    }
-    //foreach (QObject *notified, notifieds) delete notified;
-
 
     return a.exec();
 }

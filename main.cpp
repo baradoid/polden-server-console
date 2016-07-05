@@ -15,6 +15,7 @@
 #include <QSound>
 #include <QTimer>
 #include <QProcess>
+#include <QSettings>
 
 //class Logger : public QObject {
 //   // Q_OBJECT
@@ -57,8 +58,6 @@ int main(int argc, char *argv[])
     qInstallMessageHandler(myMessageOutput);
     QCoreApplication a(argc, argv);
 
-    //Logger log(&a);
-
     QList<QThread*> threads;
 
     QThread *ipThread = new QThread(&a); // thread owned by the application object
@@ -89,7 +88,28 @@ int main(int argc, char *argv[])
 
 //    w1.start();
 
-    pqList << new ProjectorQuery("192.168.1.10", "192.168.1.10");
+    QSettings projSet("projSet.ini", QSettings::IniFormat, &a);
+    //QString lcIP = projSet.value("")
+    int projCount = projSet.beginReadArray("projectors");
+    qDebug(" %d projectors in projSet.ini", projCount);
+    for(int i=0; i<projCount; i++){
+        projSet.setArrayIndex(i);
+        QString projIp = projSet.value("ip").toString();
+        //qDebug("projector %d: %s", i, projIp.toLatin1());
+        qDebug() << "projector" << i << ":" << projIp;
+        pqList << new ProjectorQuery(projIp);
+    }
+    projSet.endArray();
+
+//    QString lcIp = projSet.value("lightControllerIp").toString();
+//    if(lcIp.size() == 0){
+//        qDebug() << "lightControllerIp NULL";
+//    }
+
+
+
+
+    //pqList << new ProjectorQuery("192.168.1.10", "192.168.1.10");
     /*pqList << new ProjectorQuery("192.168.0.55", "192.168.0.55");
     pqList << new ProjectorQuery("192.168.0.14", "192.168.0.14");
     pqList << new ProjectorQuery("192.168.0.8", "192.168.0.8");

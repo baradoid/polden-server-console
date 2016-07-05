@@ -85,10 +85,10 @@ TCmdButton waitForProjectorsOnOrCancel()
         TProjState ps = pq->getState();
         if(ps == onState){
             ret = cmdFinished;
-            qInfo() << "proj " << pq->name << " in state "<< ps <<". Nothing to do.";
+            qInfo() << "proj " << pq->ip << " in state "<< ps <<". Nothing to do.";
         }
         else{
-            qInfo() << "proj " << pq->name << " in state "<< ps <<". Send PowerOn command.";
+            qInfo() << "proj " << pq->ip << " in state "<< ps <<". Send PowerOn command.";
             pq->on();
         }
     }
@@ -100,7 +100,7 @@ TCmdButton waitForProjectorsOnOrCancel()
         else{
             m_conn2 = QObject::connect(pq, &ProjectorQuery::powerOnState, [&el]() { el.exit(cmdFinished); });
 
-            qInfo() << "main> wait for power on proj " << pq->name;
+            qInfo() << "main> wait for power on proj " << pq->ip;
             ret = (TCmdButton)el.exec();
             QObject::disconnect(m_conn2);
             if(ret == cmdButtonCancel){
@@ -128,10 +128,10 @@ TCmdButton waitForProjectorsOffOrCancel()
         TProjState ps = pq->getState();
         if((ps == offState) || (ps == coolingState)){
             ret = cmdFinished;
-            qInfo() << "proj " << pq->name << " in state "<< ps <<". Nothing to do.";
+            qInfo() << "proj " << pq->ip << " in state "<< ps <<". Nothing to do.";
         }
         else{
-            qInfo() << "proj " << pq->name << " in state "<< ps <<". Send PowerOff command.";
+            qInfo() << "proj " << pq->ip << " in state "<< ps <<". Send PowerOff command.";
             pq->off();
         }
     }
@@ -143,7 +143,7 @@ TCmdButton waitForProjectorsOffOrCancel()
         else{
             m_conn2 = QObject::connect(pq, &ProjectorQuery::powerOffState, [&el]() { el.exit(cmdFinished); });
 
-            qInfo() << "main> wait for power off proj " << pq->name;
+            qInfo() << "main> wait for power off proj " << pq->ip;
             ret = (TCmdButton)el.exec();
             QObject::disconnect(m_conn2);
             if(ret == cmdButtonCancel){

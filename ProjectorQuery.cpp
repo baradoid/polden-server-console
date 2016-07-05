@@ -3,11 +3,11 @@
 #include <QTcpSocket>
 #include <QEventLoop>
 
-ProjectorQuery::ProjectorQuery(QString _ip, QString _name) :
+ProjectorQuery::ProjectorQuery(QString _ip/*, QString _name*/) :
     QObject(0),
     lastState(unknownState),
-    ip(_ip),
-    name(_name)
+    ip(_ip)/*,
+    name(_name)*/
 {
 
 }
@@ -73,7 +73,7 @@ void ProjectorQuery::process()
 
             if(curState != lastState){
                 lastState = curState;                
-                qInfo() << "ProjectorQuery" << name <<">new state:" << repl;
+                qInfo() << "ProjectorQuery" << ip <<">new state:" << repl;
                 //emit newState(repl);
             }
             if(curState == onState)

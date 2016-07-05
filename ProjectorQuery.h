@@ -23,7 +23,7 @@ class ProjectorQuery : public QObject
 {
     Q_OBJECT
 public:
-    explicit ProjectorQuery(QString _ip, QString _name);
+    explicit ProjectorQuery(QString _ip/*, QString _name*/);
     void on();
     void off();
 
@@ -49,7 +49,7 @@ public slots:
 
 
 public:
-    QString ip, name;
+    QString ip/*, name*/;
 private:
     QReadWriteLock lock;
     TProjState lastState;

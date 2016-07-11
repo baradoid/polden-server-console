@@ -12,11 +12,11 @@
 #define POWER_OFF_CMD "%1POWR 0\r"
 
 typedef enum{
-        unknownState,
-        onState,
-        warmUpState,
-        coolingState,
-        offState
+        unknownState = -1,
+        onState = 1,
+        warmUpState = 3,
+        coolingState = 2,
+        offState = 0
 } TProjState;
 
 class ProjectorQuery : public QObject
@@ -33,6 +33,7 @@ public:
 
     TProjState getState();
 
+    QString ip/*, name*/;
 
 signals:       
     void finished();
@@ -48,9 +49,10 @@ public slots:
     void process();
 
 
-public:
-    QString ip/*, name*/;
+
 private:
+    void sendCmd(QString cmd);
+
     QReadWriteLock lock;
     TProjState lastState;
     QList<TProjState> sendState;

@@ -41,6 +41,7 @@ void ProjectorQuery::process()
         //qDebug() << "proj reply" << repl;
     }
     else{
+        qDebug() << "!!!! ProjectorQuery exited !!!!" ;
         return;
     }
 
@@ -106,25 +107,79 @@ void ProjectorQuery::process()
     }
 }
 
+void ProjectorQuery::sendCmd(QString cmd)
+{
+    lock.lockForWrite();
+    QTcpSocket projectorClient(this);
+
+    projectorClient.connectToHost(ip, 4352);
+    if(projectorClient.waitForReadyRead(-1) == true){
+        QString repl(projectorClient.readAll());
+        //qDebug() << "proj reply" << repl;
+    }
+    else{
+        qDebug() << "!!!! ProjectorQuery error !!!!" ;
+    }
+    projectorClient.write(cmd.toLatin1());
+    projectorClient.flush();
+    projectorClient.close();
+    lock.unlock();
+}
+
 void ProjectorQuery::on()
 {
-    lock.lockForWrite();   
-    sendState << onState;
-    lock.unlock();
+    sendCmd(POWER_ON_CMD);
 }
 
 void ProjectorQuery::off()
 {
-    lock.lockForWrite();   
-    sendState << offState;
-    lock.unlock();
+    sendCmd(POWER_OFF_CMD);
 }
 
 
 TProjState ProjectorQuery::getState()
 {
     lock.lockForRead();
-    TProjState state = lastState;
+    TProjState state = unknownState;
+    QTcpSocket projectorClient(this);
+
+    projectorClient.connectToHost(ip, 4352);
+    if(projectorClient.waitForReadyRead(-1) == true){
+        QString repl(projectorClient.readAll());
+        //qDebug() << "proj reply" << repl;
+    }
+    else{
+        qDebug() << "!!!! ProjectorQuery error !!!!" ;
+        return unknownState;
+    }
+    projectorClient.write(GET_STATE_QUERY);
+
+    if(projectorClient.waitForReadyRead(2000) == true){
+        QString repl(projectorClient.readAll());
+
+        if(repl == "%1POWR=0\r"){
+            //qDebug() << "emit powerOffState";
+            state = offState;
+        }
+        else if(repl == "%1POWR=1\r"){
+            //qDebug() << "emit powerOnState";
+            state = onState;
+        }
+        else if(repl == "%1POWR=2\r"){
+            state = coolingState;
+        }
+        else if(repl == "%1POWR=3\r"){
+            state = warmUpState;
+        }
+        else{
+            qDebug() << "unknown repl:" << repl;
+
+        }
+        if(lastState != state){
+            //qInfo() << "PQ" << ip <<"> new state:" << repl;
+            lastState = state;
+        }
+    }
     lock.unlock();
     return state;
 }

@@ -89,6 +89,7 @@ int main(int argc, char *argv[])
 //    w1.start();
 
     QSettings projSet("projSet.ini", QSettings::IniFormat, &a);
+
     //QString lcIP = projSet.value("")
     int projCount = projSet.beginReadArray("projectors");
     qDebug(" %d projectors in projSet.ini", projCount);
@@ -118,18 +119,18 @@ int main(int argc, char *argv[])
     //pqList << new ProjectorQuery();
     //pqList << new ProjectorQuery();
 
-    foreach (ProjectorQuery* pq, pqList) {
-        QThread *pqThread = new QThread(&a); // thread owned by the application object
-        pq->moveToThread(pqThread);
-        pq->connect(pqThread, SIGNAL(started()), SLOT(process()));
-        //tcpServ.connect(pq, SIGNAL(messageReady(QString)), SLOT(printfSlot(const QString)));
-//        QObject::connect(pq, &ProjectorQuery::newState,
-//                         [pq](const QString &s) {
-//            qInfo() << " projector "<< pq->name <<" in " << s <<"state";
-//        });
-        pqThread->start();
-        threads << pqThread;
-    }
+//    foreach (ProjectorQuery* pq, pqList) {
+//        QThread *pqThread = new QThread(&a); // thread owned by the application object
+//        pq->moveToThread(pqThread);
+//        pq->connect(pqThread, SIGNAL(started()), SLOT(process()));
+//        //tcpServ.connect(pq, SIGNAL(messageReady(QString)), SLOT(printfSlot(const QString)));
+////        QObject::connect(pq, &ProjectorQuery::newState,
+////                         [pq](const QString &s) {
+////            qInfo() << " projector "<< pq->name <<" in " << s <<"state";
+////        });
+//        pqThread->start();
+//        threads << pqThread;
+//    }
 
 
     QSound warningSound("Content\\Success.wav");
@@ -167,7 +168,7 @@ int main(int argc, char *argv[])
         qInfo() << "main> wait for light turn ON";
         //add wait for light turn ON
         qInfo() <<"main> power off projectors";
-        TCmdButton ret = waitForProjectorsOffOrCancel();
+        TCmdButton ret = waitForProjectorsStateOrCancel(pqList, offState);
         qInfo() <<"main> waitForProjectorsOff end with " << resultMap[ret];
 
         qDebug("main> wait for command");
@@ -175,13 +176,15 @@ int main(int argc, char *argv[])
         qInfo()<<"main> recvd " << resultMap[mainCmd] << " cmd";
         warningSound.play();
         qInfo() <<"main> power on projectors";
-        ret = waitForProjectorsOnOrCancel();
+        ret = waitForProjectorsStateOrCancel(pqList, onState);
         qInfo() <<"main> waitForProjectorsOn end with " << resultMap[ret];
         if(ret == cmdButtonCancel)
             continue;
         if(mainCmd == cmdButton1){
-            qInfo() <<"main> wait for timeout";
-            ret = waitForTimeoutOrCancelCmd(10);
+            int pauseSec = projSet.value("but1PauseSeconds", 3*60).toInt();
+            qInfo() <<"main> wait for timeout" << pauseSec << " seconds";
+
+            ret = waitForTimeoutOrCancelCmd(pauseSec);
             qInfo() <<"main> waiting timeout end with " << resultMap[ret] << " cmd";
             if(ret == cmdButtonCancel)
                 continue;

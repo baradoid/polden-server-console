@@ -6,6 +6,8 @@
 #include <QEventLoop>
 #include <QTimer>
 #include <QProcess>
+#include <QThread>
+#include <QMap>
 
 
 TCmdButton waitForTimeoutOrCancelCmd(int secTimeout)
@@ -71,10 +73,17 @@ TCmdButton waitForBut1CmdOrBut2Cmd()
 
     return ret;
 }
-TCmdButton waitForProjectorsOnOrCancel()
+
+
+TCmdButton waitForProjectorsStateOrCancel(QList<ProjectorQuery*> &pqList, TProjState stateWaitFor)
 {
+    QMap<int, QString> projStateName;
+    projStateName[onState] = "On";
+    projStateName[offState] = "Off";
+    projStateName[coolingState] = "Cooling";
+    projStateName[warmUpState] = "WarmUp";
+
     extern CommandController cmdCtl;
-    extern QList<ProjectorQuery*> pqList;
     QEventLoop el;
 
     QMetaObject::Connection m_conn1, m_conn2;
@@ -83,73 +92,37 @@ TCmdButton waitForProjectorsOnOrCancel()
     TCmdButton ret;
     foreach (ProjectorQuery* pq, pqList) {
         TProjState ps = pq->getState();
-        if(ps == onState){
+        if(ps == stateWaitFor){
             ret = cmdFinished;
-            qInfo() << "proj " << pq->ip << " in state "<< ps <<". Nothing to do.";
+            qInfo() << "proj" << pq->ip << "in state"<< projStateName[ps] <<". Nothing to do.";
         }
         else{
-            qInfo() << "proj " << pq->ip << " in state "<< ps <<". Send PowerOn command.";
-            pq->on();
+            qInfo() << "proj" << pq->ip << "in state"<< projStateName[ps] <<". Changing state.";
+            if(stateWaitFor == offState)
+                pq->off();
+            else if(stateWaitFor == onState)
+                pq->on();
         }
     }
 
     foreach (ProjectorQuery* pq, pqList) {
-        if(pq->getState() == onState){
-            ret = cmdFinished;
-        }
-        else{
-            m_conn2 = QObject::connect(pq, &ProjectorQuery::powerOnState, [&el]() { el.exit(cmdFinished); });
-
-            qInfo() << "main> wait for power on proj " << pq->ip;
-            ret = (TCmdButton)el.exec();
-            QObject::disconnect(m_conn2);
-            if(ret == cmdButtonCancel){
-                break;
+        qInfo() << "wait for proj" << pq->ip ;
+        if(stateWaitFor == offState){
+            TProjState state = pq->getState();
+            while( ((state == offState) || (state == coolingState)) == false){
+                state = pq->getState();
+                QThread::msleep(250);
             }
         }
-    }
-
-    QObject::disconnect(m_conn1);
-
-    return ret;
-}
-
-TCmdButton waitForProjectorsOffOrCancel()
-{
-    extern CommandController cmdCtl;
-    extern QList<ProjectorQuery*> pqList;
-    QEventLoop el;
-
-    QMetaObject::Connection m_conn1, m_conn2;
-    m_conn1 = QObject::connect(&cmdCtl, &CommandController::buttonCancel, [&el]() { el.exit(cmdButtonCancel); });
-
-    TCmdButton ret;
-    foreach (ProjectorQuery* pq, pqList) {
-        TProjState ps = pq->getState();
-        if((ps == offState) || (ps == coolingState)){
-            ret = cmdFinished;
-            qInfo() << "proj " << pq->ip << " in state "<< ps <<". Nothing to do.";
-        }
         else{
-            qInfo() << "proj " << pq->ip << " in state "<< ps <<". Send PowerOff command.";
-            pq->off();
-        }
-    }
-
-    foreach (ProjectorQuery* pq, pqList) {
-        if(pq->getState() == offState){
-            ret = cmdFinished;
-        }
-        else{
-            m_conn2 = QObject::connect(pq, &ProjectorQuery::powerOffState, [&el]() { el.exit(cmdFinished); });
-
-            qInfo() << "main> wait for power off proj " << pq->ip;
-            ret = (TCmdButton)el.exec();
-            QObject::disconnect(m_conn2);
-            if(ret == cmdButtonCancel){
-                break;
+            while(pq->getState() != stateWaitFor){
+                if(stateWaitFor == onState)
+                    pq->on();
+                QThread::msleep(250);
             }
         }
+
+        ret = cmdFinished;
     }
 
     QObject::disconnect(m_conn1);

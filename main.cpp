@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 
     //QString lcIP = projSet.value("")
     int projCount = projSet.beginReadArray("projectors");
-    qDebug(" %d projectors in projSet.ini", projCount);
+    qInfo(" %d projectors in projSet.ini", projCount);
     for(int i=0; i<projCount; i++){
         projSet.setArrayIndex(i);
         QString projIp = projSet.value("ip").toString();

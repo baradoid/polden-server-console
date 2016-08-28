@@ -12,12 +12,14 @@ SOURCES += main.cpp \
     ProjectorQuery.cpp \
     CommandController.cpp \
     ConsoleInputProcessor.cpp \
-    waitScenarios.cpp
+    waitScenarios.cpp \
+    lightserver.cpp
 
 HEADERS += \
     telnettcpserver.h \
     ProjectorQuery.h \
     CommandController.h \
     ConsoleInputProcessor.h \
-    waitScenarios.h
+    waitScenarios.h \
+    lightserver.h
 

@@ -8,6 +8,7 @@
 #include "CommandController.h"
 #include "ConsoleInputProcessor.h"
 #include "waitScenarios.h"
+#include "lightserver.h"
 
 #include <qtconcurrentrun.h>
 #include <QEventLoop>
@@ -75,6 +76,7 @@ int main(int argc, char *argv[])
     tcpServ = &tcpServLoc;
     cmdCtl.connect(tcpServ, SIGNAL(msgRecvd(QString)), SLOT(processMessage(const QString)));
 
+    LightServer lightServ;
     //QThread * thread = new QThread(&a); // thread owned by the application object
     //Notified * notified = new Notified; // can't have an owner before it's moved to another thread
     //tcpServ.moveToThread(thread);

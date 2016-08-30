@@ -17,23 +17,23 @@ void CommandController::processMessage(const QString &msg)
 
     if((msg == "but1\r\n") || (msg == "but1")){
         qInfo() << "CommandController> button1";
-        emit button1();
+        //emit button1();
     }
     else if((msg == "but2\r\n")||(msg == "but2")){
         qInfo() << "CommandController> button2";
-        emit button2();
+        //emit button2();
     }
     else if((msg == "cancel\r\n")||(msg == "cancel")){
         qInfo() << "CommandController> cancel";
-        emit buttonCancel();
+        //emit buttonCancel();
     }
     else if((msg == "light_turned_off\r\n")||(msg == "light_turned_off")){
         qInfo() << "CommandController> light off detected";
-        emit lightTurnedOff();
+        //emit lightTurnedOff();
     }
     else if((msg == "light_turned_on\r\n")||(msg == "light_turned_on")){
         qInfo() << "CommandController> light on detected";
-        emit lightTurnedOn();
+        //emit lightTurnedOn();
     }
     else{
         //qDebug() << "CommandController> rcv: " << msg ;

@@ -18,15 +18,15 @@ void CommandController::processMessage(const QString &msg)
 
     if((msg == "but1\r\n") || (msg == "but1")){
         qInfo() << "CommandController> button1";
-        //emit button1();
+        emit button1();
     }
     else if((msg == "but2\r\n")||(msg == "but2")){
         qInfo() << "CommandController> button2";
-        //emit button2();
+        emit button2();
     }
     else if((msg == "cancel\r\n")||(msg == "cancel")){
         qInfo() << "CommandController> cancel";
-        //emit buttonCancel();
+        emit buttonCancel();
     }
     else if((msg == "light_turned_off\r\n")||(msg == "light_turned_off")){
         qInfo() << "CommandController> light off detected";
@@ -38,7 +38,7 @@ void CommandController::processMessage(const QString &msg)
     }
     else{
         //qDebug() << "CommandController> rcv: " << msg ;
-        qInfo() << "CommandController> bbb";
+        //qInfo() << "CommandController> bbb";
         //emit button1();
         tcpServ->printfLC(msg + "\r\n");
     }

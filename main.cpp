@@ -47,11 +47,23 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
 void turnOnLight()
 {
     qInfo() << "light_on" ;
+    tcpServ->printfLC("light ON\r\n");
 }
 
 void turnOffLight()
 {
     qInfo() << "light_off" ;
+    tcpServ->printfLC("light OFF\r\n");
+}
+
+void setFastBlink()
+{
+    tcpServ->printfLC("blink fast\r\n");
+}
+
+void setNormalBlink()
+{
+    tcpServ->printfLC("blink normal\r\n");
 }
 
 int main(int argc, char *argv[])
@@ -112,6 +124,32 @@ int main(int argc, char *argv[])
 
 
 
+    QString acceptPath = projSet.value("acceptSoundPath").toString();
+    QString successPath = projSet.value("successSoundPath").toString();
+    QString videoPath = projSet.value("videoPath").toString();
+    QString videoPlayerPath = projSet.value("videoPlayerPath").toString();
+
+    qInfo(qPrintable(QString("accept sound path: ")+ QString(acceptPath)));
+    qInfo(qPrintable(QString("warning sound path: ")+ QString(successPath)));
+    qInfo(qPrintable(QString("video path: ")+ QString(videoPath)));
+    qInfo(qPrintable(QString("video player path: ")+ QString(videoPlayerPath)));
+
+    QSound warningSound(successPath);
+    QSound acceptSound(acceptPath);
+
+    QStringList args1 ;
+    args1.append(videoPath);
+    args1.append("/play");
+    //args1.append("/fullscreen");
+    args1.append("/close");
+
+    QStringList args2 ;
+    args2.append(videoPath);
+    args2.append("/open");
+    //args2.append("/fullscreen");
+
+    videoPlayer.setProgram(videoPlayerPath);
+    videoPlayer.setArguments(args1);
 
     //pqList << new ProjectorQuery("192.168.1.10", "192.168.1.10");
     /*pqList << new ProjectorQuery("192.168.0.55", "192.168.0.55");
@@ -136,22 +174,6 @@ int main(int argc, char *argv[])
 //    }
 
 
-    QSound warningSound("Content\\Success.wav");
-
-    QStringList args1 ;
-    args1.append("Content\\Video.avi");
-    args1.append("/play");
-    //args1.append("/fullscreen");
-    args1.append("/close");
-
-    QStringList args2 ;
-    args2.append("Content\\Video.avi");
-    args2.append("/open");
-    //args2.append("/fullscreen");
-
-
-    videoPlayer.setProgram("MPC-HC64\\mpc-hc64");
-    videoPlayer.setArguments(args1);
 
     QHash<TCmdButton, QString> resultMap;
     resultMap.insert(cmdButton1, "But1");
@@ -159,6 +181,7 @@ int main(int argc, char *argv[])
     resultMap.insert(cmdButtonCancel, "ButCancel");
     resultMap.insert(cmdTimeout, "timeout");
     resultMap.insert(cmdFinished, "finished");
+    acceptSound.play();
 
      forever{
         qInfo() << "main> =====  ";
@@ -174,8 +197,13 @@ int main(int argc, char *argv[])
         TCmdButton ret = waitForProjectorsStateOrCancel(pqList, offState);
         qInfo() <<"main> waitForProjectorsOff end with " << resultMap[ret];
 
+        qInfo() << "main> set normal blink";
+        setNormalBlink();
+
         qDebug("main> wait for command");
         TCmdButton mainCmd = waitForBut1CmdOrBut2Cmd();
+        qInfo() << "main> set fast blink";
+        setFastBlink();
         qInfo()<<"main> recvd " << resultMap[mainCmd] << " cmd";
         warningSound.play();
         qInfo() <<"main> power on projectors";
@@ -203,11 +231,14 @@ int main(int argc, char *argv[])
         turnOffLight();
         qInfo() << "main> wait for light turn OFF";
         //add wait for light turn OFF
+        QThread::sleep(3);
         videoPlayer.close();
         videoPlayer.setArguments(args1);
         qInfo() <<"main> video player start";
+        //ret = waitForFinishPlayOrCancel();
         videoPlayer.start();
-        ret = waitForFinishPlayOrCancel();
+        QThread::sleep(3);
+        ret = waitForFinishPlayOrCancel(&videoPlayer);
         qInfo() <<"main> video player end with " << resultMap[ret];
 
         continue;

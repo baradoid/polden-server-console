@@ -24,8 +24,11 @@ public slots:
 
 
     void printf(const QString &msg);
+    //void printfLc(const QString &msg);
+    void printfLC(const QString &s);
 private slots:
     void printfSlot(const QString &s);
+
 private:
     QTcpServer * mTcpServer;
     //QTcpSocket * mTcpSocket;
@@ -42,6 +45,7 @@ private:
 signals:
     void printSignal(const QString &msg);
     void msgRecvd(const QString &msg);
+    //void printfWoSlot(const QString &s);
 };
 
 //class TelnetTcpServerThread : public QThread

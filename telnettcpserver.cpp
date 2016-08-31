@@ -128,9 +128,56 @@ void TelnetTcpServer::printfSlot(const QString &s)
     //qInfo("qTelnetServ %s", qPrintable(s));
 }
 
+//void TelnetTcpServer::printfWoSlot(const QString &s)
+//{
+////    if(mTcpSocket != NULL){
+////        if(mTcpSocket->isWritable() == true){
+////            mTcpSocket->write(qPrintable(s));
+////            mTcpSocket->write(qPrintable('\n'));
+////        }
+////    }
+
+//    QList<int> sockHashKeys = sockHash.keys();
+
+//    foreach (int key, sockHashKeys) {
+//        QTcpSocket *sock = sockHash[key];
+//        TSocketAttr *sAttr = sockAttr[key];
+
+//        if((sock->isWritable() == true) ){
+//            sock->write(qPrintable(s));
+//            sock->flush();
+//        }
+//    }
+
+////    foreach (QTcpSocket *sock, sockList) {
+////        if(sock->isWritable() == true){
+////            sock->write(qPrintable(s));
+////            sock->write(qPrintable('\n'));
+////        }
+////    }
+
+//    //qInfo("qTelnetServ %s", qPrintable(s));
+//}
+
+
 void TelnetTcpServer::printf(const QString &s)
 {
     emit printSignal(s);
+}
+
+void TelnetTcpServer::printfLC(const QString &s)
+{
+    QList<int> sockHashKeys = sockHash.keys();
+
+    foreach (int key, sockHashKeys) {
+        QTcpSocket *sock = sockHash[key];
+        TSocketAttr *sAttr = sockAttr[key];
+
+        if(sock->isWritable() == true){
+            sock->write(qPrintable(s));
+            sock->flush();
+        }
+    }
 }
 
 

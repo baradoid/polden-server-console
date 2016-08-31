@@ -3,6 +3,7 @@
 #include <QDebug>
 //#include <QTextCodec>
 #include <QEventLoop>
+#include "telnettcpserver.h"
 
 CommandController::CommandController(QObject *parent) : QObject(parent)
 {
@@ -13,7 +14,7 @@ CommandController::CommandController(QObject *parent) : QObject(parent)
 void CommandController::processMessage(const QString &msg)
 {
     //QTextCodec *codec1 = QTextCodec::codecForName( "CP866" );
-
+    extern TelnetTcpServer *tcpServ;
 
     if((msg == "but1\r\n") || (msg == "but1")){
         qInfo() << "CommandController> button1";
@@ -29,7 +30,7 @@ void CommandController::processMessage(const QString &msg)
     }
     else if((msg == "light_turned_off\r\n")||(msg == "light_turned_off")){
         qInfo() << "CommandController> light off detected";
-        //emit lightTurnedOff();
+        //emit lightTurnedOff();       
     }
     else if((msg == "light_turned_on\r\n")||(msg == "light_turned_on")){
         qInfo() << "CommandController> light on detected";
@@ -37,6 +38,9 @@ void CommandController::processMessage(const QString &msg)
     }
     else{
         //qDebug() << "CommandController> rcv: " << msg ;
+        qInfo() << "CommandController> bbb";
+        //emit button1();
+        tcpServ->printfLC(msg + "\r\n");
     }
 }
 

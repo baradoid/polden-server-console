@@ -153,13 +153,13 @@ int main(int argc, char *argv[])
     QStringList args1 ;
     args1.append(videoPath);
     args1.append("/play");
-    //args1.append("/fullscreen");
+    args1.append("/fullscreen");
     args1.append("/close");
 
     QStringList args2 ;
     args2.append(videoPath);
     args2.append("/open");
-    //args2.append("/fullscreen");
+    args2.append("/fullscreen");
 
     videoPlayer.setProgram(videoPlayerPath);
     videoPlayer.setArguments(args1);
@@ -214,6 +214,7 @@ int main(int argc, char *argv[])
         setNormalBlink();
         setGreenLed();
 
+        acceptSound.play();
         qDebug("main> wait for command");
         TCmdButton mainCmd = waitForBut1CmdOrBut2Cmd();
         qInfo() << "main> set fast blink";
@@ -236,7 +237,12 @@ int main(int argc, char *argv[])
         }
         else if(mainCmd = cmdButton2){
             qInfo() <<"main> wait for 2nd push but2 or cancel";
-            //ret = waitForTimeoutOrCancelCmd(10);
+            waitForBut1CmdOrBut2Cmd();
+            if(ret == cmdButtonCancel){
+                qInfo() <<"main> cancel but - fast light on";
+                turnOnLightFast();
+                continue;
+            }
         }
 
         warningSound.stop();

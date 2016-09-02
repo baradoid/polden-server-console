@@ -80,6 +80,7 @@ void TelnetTcpServer::slotServerRead(int sockInd)
             sAttr->bWo = true;
 
             sock->write(QString("green\r\n").toLatin1());
+            sock->flush();
         }
         else if(msg == "ping\r\n"){
             qDebug("TelnetTcpServer>ping request recvd!");

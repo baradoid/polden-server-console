@@ -50,6 +50,13 @@ void turnOnLight()
     tcpServ->printfLC("light ON\r\n");
 }
 
+void turnOnLightFast()
+{
+    qInfo() << "light_on" ;
+    tcpServ->printfLC("light ON fast\r\n");
+}
+
+
 void turnOffLight()
 {
     qInfo() << "light_off" ;
@@ -65,6 +72,12 @@ void setNormalBlink()
 {
     tcpServ->printfLC("blink normal\r\n");
 }
+
+void setGreenLed()
+{
+    tcpServ->printfLC("green\r\n");
+}
+
 
 int main(int argc, char *argv[])
 {   
@@ -199,6 +212,7 @@ int main(int argc, char *argv[])
 
         qInfo() << "main> set normal blink";
         setNormalBlink();
+        setGreenLed();
 
         qDebug("main> wait for command");
         TCmdButton mainCmd = waitForBut1CmdOrBut2Cmd();
@@ -240,6 +254,10 @@ int main(int argc, char *argv[])
         QThread::sleep(3);
         ret = waitForFinishPlayOrCancel(&videoPlayer);
         qInfo() <<"main> video player end with " << resultMap[ret];
+        if(ret == cmdButtonCancel){
+            qInfo() <<"main> cancel but - fast light on";
+            turnOnLightFast();
+        }
 
         continue;
     }

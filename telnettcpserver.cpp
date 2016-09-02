@@ -1,5 +1,5 @@
 #include "telnettcpserver.h"
-
+#include <QThread>
 //#include <QTextCodec>
 
 TelnetTcpServer::TelnetTcpServer(int port, QObject *parent) : QObject(parent),
@@ -75,9 +75,11 @@ void TelnetTcpServer::slotServerRead(int sockInd)
         //sock->write(msg);
 
         //qDebug() << codec1->fromUnicode(msg);
-        if( (msg == "wo\r\n") || (msg == "wo\r") || (msg == "wo\n") ){
-            qDebug("TelnetTcpServer>wo msg recvd!");
+        if( (msg == "wo\r\n") || (msg == "wo\r") || (msg == "wo\n") ){            
+            qInfo("TelnetTcpServer>wo msg recvd! set but to green");
             sAttr->bWo = true;
+
+            sock->write(QString("green\r\n").toLatin1());
         }
         else if(msg == "ping\r\n"){
             qDebug("TelnetTcpServer>ping request recvd!");
@@ -178,6 +180,7 @@ void TelnetTcpServer::printfLC(const QString &s)
             sock->flush();
         }
     }
+    QThread::msleep(500);
 }
 
 

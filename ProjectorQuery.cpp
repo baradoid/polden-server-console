@@ -2,13 +2,20 @@
 #include <QThread>
 #include <QTcpSocket>
 #include <QEventLoop>
+#include <QTimer>
 
-ProjectorQuery::ProjectorQuery(QString _ip/*, QString _name*/) :
+ProjectorQuery::ProjectorQuery(QString _ip/*, QString _name*/, int timeOutSecs) :
     QObject(0),
     lastState(unknownState),
     ip(_ip)/*,
     name(_name)*/
 {
+
+    /*turnOffTimer.connect(
+                [=](){off()}, SIGNAL(timeout()), );*/
+    connect(&turnOffTimer, &QTimer::timeout, [this](){off();});
+
+    turnOffTimer.setInterval(timeOutSecs*1000);
 
 }
 

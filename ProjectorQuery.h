@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QReadWriteLock>
+#include <QTimer>
 
 #define POWER_ON_QUERY "%1POWR=1\r"
 #define POWER_OFF_QUERY "%1POWR=0\r"
@@ -23,7 +24,7 @@ class ProjectorQuery : public QObject
 {
     Q_OBJECT
 public:
-    explicit ProjectorQuery(QString _ip/*, QString _name*/);
+    explicit ProjectorQuery(QString _ip/*, QString _name*/, int timeOutSecs = 300);
     void on();
     void off();
 
@@ -56,6 +57,7 @@ private:
     QReadWriteLock lock;
     TProjState lastState;
     QList<TProjState> sendState;
+    QTimer turnOffTimer;
 
 };
 

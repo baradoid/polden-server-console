@@ -119,14 +119,17 @@ int main(int argc, char *argv[])
     QSettings projSet("projSet.ini", QSettings::IniFormat, &a);
 
     //QString lcIP = projSet.value("")
+    int turnOffTimeOut = projSet.value("projTurnOffTimeOut", 300).toInt();
     int projCount = projSet.beginReadArray("projectors");
-    qInfo(" %d projectors in projSet.ini", projCount);
+
+    qInfo(" projectors in projSet.ini: %d ", projCount);
+    qInfo(" pojectors turn off timeOut: %d", turnOffTimeOut);
     for(int i=0; i<projCount; i++){
         projSet.setArrayIndex(i);
         QString projIp = projSet.value("ip").toString();
         //qDebug("projector %d: %s", i, projIp.toLatin1());
         qDebug() << "projector" << i << ":" << projIp;
-        pqList << new ProjectorQuery(projIp);
+        pqList << new ProjectorQuery(projIp, turnOffTimeOut);
     }
     projSet.endArray();
 
@@ -146,6 +149,8 @@ int main(int argc, char *argv[])
     qInfo(qPrintable(QString("warning sound path: ")+ QString(successPath)));
     qInfo(qPrintable(QString("video path: ")+ QString(videoPath)));
     qInfo(qPrintable(QString("video player path: ")+ QString(videoPlayerPath)));
+
+    TCmdButton ret;
 
     QSound warningSound(successPath);
     QSound acceptSound(acceptPath);
@@ -206,9 +211,9 @@ int main(int argc, char *argv[])
         turnOnLight();
         qInfo() << "main> wait for light turn ON";
         //add wait for light turn ON
-        qInfo() <<"main> power off projectors";
-        TCmdButton ret = waitForProjectorsStateOrCancel(pqList, offState);
-        qInfo() <<"main> waitForProjectorsOff end with " << resultMap[ret];
+        //qInfo() <<"main> power off projectors";
+        // = waitForProjectorsStateOrCancel(pqList, offState);
+        //qInfo() <<"main> waitForProjectorsOff end with " << resultMap[ret];
 
         qInfo() << "main> set normal blink";
         setNormalBlink();

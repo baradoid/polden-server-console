@@ -17,6 +17,7 @@
 #include <QTimer>
 #include <QProcess>
 #include <QSettings>
+#include <QFileInfo>
 
 //class Logger : public QObject {
 //   // Q_OBJECT
@@ -79,6 +80,7 @@ void setGreenLed()
 }
 
 
+
 int main(int argc, char *argv[])
 {   
     qInstallMessageHandler(myMessageOutput);
@@ -116,6 +118,11 @@ int main(int argc, char *argv[])
 
 //    w1.start();
 
+    if(QFileInfo("projSet.ini").exists() == true)
+        qInfo("projSet.ini exist");
+    else
+        qInfo("projSet.ini not found");
+
     QSettings projSet("projSet.ini", QSettings::IniFormat, &a);
 
     //QString lcIP = projSet.value("")
@@ -137,8 +144,6 @@ int main(int argc, char *argv[])
 //    if(lcIp.size() == 0){
 //        qDebug() << "lightControllerIp NULL";
 //    }
-
-
 
     QString acceptPath = projSet.value("acceptSoundPath").toString();
     QString successPath = projSet.value("successSoundPath").toString();
@@ -192,7 +197,6 @@ int main(int argc, char *argv[])
 //    }
 
 
-
     QHash<TCmdButton, QString> resultMap;
     resultMap.insert(cmdButton1, "But1");
     resultMap.insert(cmdButton2, "But2");
@@ -227,6 +231,7 @@ int main(int argc, char *argv[])
         qInfo()<<"main> recvd " << resultMap[mainCmd] << " cmd";
         warningSound.play();
         qInfo() <<"main> power on projectors";
+        powerOnProjectors();
         ret = waitForProjectorsStateOrCancel(pqList, onState);
         qInfo() <<"main> waitForProjectorsOn end with " << resultMap[ret];
         if(ret == cmdButtonCancel)

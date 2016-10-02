@@ -49,8 +49,6 @@ signals:
 public slots:
     void process();
 
-
-
 private:
     void sendCmd(QString cmd);
 
@@ -60,5 +58,7 @@ private:
     QTimer turnOffTimer;
 
 };
+
+void powerOnProjectors();
 
 #endif // PROJECTORQUERY_H

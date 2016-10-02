@@ -4,6 +4,15 @@
 #include <QEventLoop>
 #include <QTimer>
 
+void powerOnProjectors()
+{
+    extern QList<ProjectorQuery*> pqList;
+
+    foreach(ProjectorQuery* pq, pqList){
+        pq->on();
+    }
+}
+
 ProjectorQuery::ProjectorQuery(QString _ip/*, QString _name*/, int timeOutSecs) :
     QObject(0),
     lastState(unknownState),
@@ -13,10 +22,14 @@ ProjectorQuery::ProjectorQuery(QString _ip/*, QString _name*/, int timeOutSecs) 
 
     /*turnOffTimer.connect(
                 [=](){off()}, SIGNAL(timeout()), );*/
-    connect(&turnOffTimer, &QTimer::timeout, [this](){off();});
+    connect(&turnOffTimer, &QTimer::timeout,
+            [this](){
+            qInfo() << "ProjectorQuery" << ip <<"> off time out";
+            off();
+        });
 
     turnOffTimer.setInterval(timeOutSecs*1000);
-
+    turnOffTimer.start();
 }
 
 void ProjectorQuery::waitForPowerOn()
@@ -136,6 +149,7 @@ void ProjectorQuery::sendCmd(QString cmd)
 void ProjectorQuery::on()
 {
     sendCmd(POWER_ON_CMD);
+    turnOffTimer.start();
 }
 
 void ProjectorQuery::off()
@@ -190,4 +204,3 @@ TProjState ProjectorQuery::getState()
     lock.unlock();
     return state;
 }
-

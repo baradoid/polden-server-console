@@ -38,7 +38,7 @@
 
 
 CommandController cmdCtl;
-QProcess videoPlayer;
+
 QList<ProjectorQuery*> pqList;
 TelnetTcpServer *tcpServ = NULL;
 
@@ -170,8 +170,9 @@ int main(int argc, char *argv[])
     args2.append(videoPath);
     args2.append("/open");
     args2.append("/fullscreen");
-
-    videoPlayer.setProgram(videoPlayerPath);
+    QProcess videoPlayer;
+    videoPlayer.setWorkingDirectory("C:\\Content\\MPC-HC64\\");
+    videoPlayer.setProgram("mpc-hc64.exe");
     videoPlayer.setArguments(args1);
 
     //pqList << new ProjectorQuery("192.168.1.10", "192.168.1.10");
